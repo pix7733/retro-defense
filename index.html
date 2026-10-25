@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0d1b2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Retro Defense</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%232e7d32'/><ellipse cx='8' cy='8' rx='6' ry='4' fill='%238d5524'/><rect x='5' y='7.5' width='6' height='1' fill='%23fff'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- AUTH -->
+  <section id="screen-auth" class="screen">
+    <div class="logo">
+      <div class="logo-top">RETRO</div>
+      <div class="logo-bottom">DEFENSE</div>
+      <div class="logo-sub">KNOW THE CALL. MAKE THE STOP.</div>
+    </div>
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="login">LOG IN</button>
+        <button class="tab" data-tab="join">JOIN TEAM</button>
+      </div>
+      <form id="form-login" class="form">
+        <label>NAME<input name="name" autocomplete="username" required maxlength="40"></label>
+        <label>PIN<input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="current-password" required maxlength="6"></label>
+        <button class="btn btn-primary" type="submit">LOG IN</button>
+      </form>
+      <form id="form-join" class="form hidden">
+        <label>NAME <small>(first + last initial)</small><input name="name" required maxlength="40" placeholder="Jalen T"></label>
+        <label>POSITION<select name="position" required class="pos-select"></select></label>
+        <label>PIN <small>(4-6 digits)</small><input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,6}" required maxlength="6" autocomplete="new-password"></label>
+        <label>TEAM CODE<input name="team_code" required autocapitalize="characters"></label>
+        <details class="coach-details"><summary>I'm a coach</summary>
+          <label>COACH CODE<input name="coach_code"></label>
+        </details>
+        <button class="btn btn-primary" type="submit">JOIN</button>
+      </form>
+      <p class="form-error" id="auth-error"></p>
+    </div>
+    <p class="demo-note hidden" id="demo-note">DEMO MODE: data saved on this device only.<br>Team code: RAMS · Coach code: COACH1</p>
+  </section>
+
+  <!-- HOME -->
+  <section id="screen-home" class="screen hidden">
+    <div class="logo small">
+      <div class="logo-top">RETRO</div>
+      <div class="logo-bottom">DEFENSE</div>
+    </div>
+    <div class="player-card">
+      <div class="pc-name" id="home-name"></div>
+      <div class="pc-pos" id="home-pos"></div>
+      <div class="pc-stats" id="home-stats"></div>
+    </div>
+    <div class="menu">
+      <button class="btn btn-primary btn-big" data-go="play">▶ PLAY GAME</button>
+      <button class="btn" data-go="film">FILM ROOM</button>
+      <button class="btn" data-go="leaderboard">LEADERBOARD</button>
+      <button class="btn btn-coach hidden" id="btn-coach" data-go="admin">COACH PANEL</button>
+      <button class="btn btn-ghost" data-go="howto">HOW TO PLAY</button>
+      <button class="btn btn-ghost" id="btn-logout">LOG OUT</button>
+    </div>
+  </section>
+
+  <!-- HOW TO -->
+  <section id="screen-howto" class="screen hidden">
+    <h2 class="title">HOW TO PLAY</h2>
+    <div class="panel prose">
+      <p><b>You're on defense.</b> Stop the offense on 4 drives.</p>
+      <p><b>1. Read it.</b> Before every snap a call or rules question pops up. Watch the formation and the motion. Answer before the play clock runs out.</p>
+      <p><b>2. Right answer = great jump.</b> You start fast and the runner slows down. <b>Wrong answer</b> = you're out of position and the runner breaks free.</p>
+      <p><b>3. Make the tackle.</b> Touch and drag on the field (or use arrow keys) to move your player, the one with the <span class="you-tag">YOU</span> arrow. Tap <b>DIVE</b> (or space) for a burst and a longer reach. Dive tackles can force fumbles.</p>
+      <p><b>4. Get off the field.</b> Hold them on 3 downs to force a punt. Inside your 35 they'll kick a field goal.</p>
+      <p><b>Points:</b> correct answer 100 + speed bonus + streak bonus, tackle 50, tackle for loss 150, stop 500, turnover 750.</p>
+      <p><b>Film Room</b> lets you study every question with no clock. Your misses come back more often until you get them.</p>
+    </div>
+    <button class="btn" data-go="home">BACK</button>
+  </section>
+
+  <!-- GAME -->
+  <section id="screen-game" class="screen screen-game hidden">
+    <div class="hud">
+      <div class="hud-left"><span id="hud-down">1ST &amp; 10</span><span id="hud-spot">OPP 25</span></div>
+      <div class="hud-mid"><span id="hud-q">DRIVE 1/4</span></div>
+      <div class="hud-right"><span id="hud-score">0</span><span id="hud-opp">OPP 0</span></div>
+    </div>
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="field"></canvas>
+      <div id="banner" class="banner hidden"></div>
+      <div id="qcard" class="qcard hidden">
+        <div class="q-head"><span class="q-kind" id="q-kind"></span><span class="q-timer" id="q-timer">15</span></div>
+        <div class="q-bar"><div id="q-bar-fill"></div></div>
+        <div class="q-prompt" id="q-prompt"></div>
+        <div class="q-choices" id="q-choices"></div>
+      </div>
+      <div id="feedback" class="feedback hidden">
+        <div class="fb-title" id="fb-title"></div>
+        <div class="fb-answer" id="fb-answer"></div>
+        <div class="fb-expl" id="fb-expl"></div>
+        <button class="btn btn-primary" id="fb-continue">SNAP IT ▶</button>
+      </div>
+      <button id="btn-dive" class="btn-dive hidden">DIVE</button>
+      <div id="action-hint" class="action-hint hidden">DRAG TO MOVE · TAP DIVE</div>
+    </div>
+    <button class="btn-quit" id="btn-quit" aria-label="Quit game">✕</button>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen hidden">
+    <h2 class="title">FINAL</h2>
+    <div class="panel">
+      <div class="final-score" id="final-score"></div>
+      <div class="final-grid" id="final-grid"></div>
+      <div class="new-best hidden" id="new-best">★ NEW PERSONAL BEST ★</div>
+    </div>
+    <div class="panel" id="study-panel">
+      <h3>STUDY THESE</h3>
+      <div id="study-list"></div>
+    </div>
+    <div class="menu">
+      <button class="btn btn-primary" data-go="play">PLAY AGAIN</button>
+      <button class="btn" data-go="home">HOME</button>
+    </div>
+  </section>
+
+  <!-- FILM ROOM -->
+  <section id="screen-film" class="screen hidden">
+    <h2 class="title">FILM ROOM</h2>
+    <div class="seg" id="film-filter">
+      <button class="seg-btn active" data-f="all">ALL</button>
+      <button class="seg-btn" data-f="team">GAME PLAN</button>
+      <button class="seg-btn" data-f="rule">RULES</button>
+      <button class="seg-btn" data-f="missed">MY MISSES</button>
+    </div>
+    <div class="panel film-card">
+      <canvas id="film-canvas" class="film-canvas hidden"></canvas>
+      <div class="q-kind" id="film-kind"></div>
+      <div class="q-prompt" id="film-prompt"></div>
+      <div class="q-choices" id="film-choices"></div>
+      <div class="fb-expl hidden" id="film-expl"></div>
+      <div class="film-count" id="film-count"></div>
+    </div>
+    <div class="menu row">
+      <button class="btn" data-go="home">DONE</button>
+      <button class="btn btn-primary" id="film-next">NEXT ▶</button>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section id="screen-leaderboard" class="screen hidden">
+    <h2 class="title">LEADERBOARD</h2>
+    <div class="panel"><div id="lb-list" class="lb-list"></div></div>
+    <button class="btn" data-go="home">BACK</button>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="screen-admin" class="screen screen-wide hidden">
+    <h2 class="title">COACH PANEL</h2>
+    <div class="seg" id="admin-tabs">
+      <button class="seg-btn active" data-t="questions">QUESTIONS</button>
+      <button class="seg-btn" data-t="players">PLAYERS</button>
+      <button class="seg-btn" data-t="settings">SETTINGS</button>
+    </div>
+
+    <div id="admin-questions" class="admin-pane">
+      <div class="admin-bar">
+        <button class="btn btn-primary btn-sm" id="q-new">+ NEW GAME PLAN ITEM</button>
+        <select id="q-filter-kind" class="sm-select">
+          <option value="">All types</option><option value="team">Game plan</option><option value="rule">Rules</option>
+        </select>
+        <select id="q-filter-pos" class="sm-select pos-select-all"></select>
+        <input id="q-search" class="sm-input" placeholder="Search…">
+      </div>
+      <div id="q-list" class="q-list"></div>
+    </div>
+
+    <div id="admin-players" class="admin-pane hidden">
+      <div id="p-list" class="p-list"></div>
+    </div>
+
+    <div id="admin-settings" class="admin-pane hidden">
+      <div class="panel">
+        <form id="form-settings" class="form">
+          <label>TEAM CODE <small>(players need this to join)</small><input name="team_code" minlength="4"></label>
+          <label>COACH CODE <small>(gives coach access at sign-up)</small><input name="coach_code" minlength="6"></label>
+          <button class="btn btn-primary" type="submit">SAVE CODES</button>
+          <p class="form-ok" id="settings-ok"></p>
+        </form>
+      </div>
+    </div>
+    <button class="btn" data-go="home">BACK</button>
+  </section>
+
+  <!-- QUESTION EDITOR -->
+  <div id="editor" class="modal hidden">
+    <div class="modal-body">
+      <h3 id="ed-title">NEW ITEM</h3>
+      <form id="form-q" class="form">
+        <div class="row2">
+          <label>TYPE<select name="kind"><option value="team">Game plan / team call</option><option value="rule">Rule</option></select></label>
+          <label>CATEGORY<input name="category" placeholder="Week 9 vs. Opponent" list="cat-list"></label>
+          <datalist id="cat-list"></datalist>
+        </div>
+        <label>QUESTION<textarea name="prompt" rows="2" required placeholder="The H goes in motion. What's the call?"></textarea></label>
+        <div class="choices-ed" id="ed-choices"></div>
+        <label>EXPLANATION <small>(shown after they answer)</small><textarea name="explanation" rows="2" placeholder="H motion = LUCK. Mike makes the call, Star bumps."></textarea></label>
+
+        <fieldset class="fs">
+          <legend>WHO SEES IT</legend>
+          <label class="chk"><input type="checkbox" id="ed-allpos" checked> Whole defense</label>
+          <div class="pos-checks" id="ed-pos"></div>
+          <details class="ed-players-d"><summary>Only specific players (optional)</summary>
+            <div class="pos-checks" id="ed-players"></div>
+          </details>
+        </fieldset>
+
+        <fieldset class="fs">
+          <legend>PRE-SNAP PICTURE (optional)</legend>
+          <div class="row3">
+            <label>FORMATION<select name="formation" id="ed-formation"></select></label>
+            <label>STRENGTH<select name="strength" id="ed-strength"><option value="right">Right</option><option value="left">Left</option></select></label>
+            <label>MOTION<select name="motion" id="ed-motion"></select></label>
+          </div>
+          <canvas id="ed-preview" class="ed-preview"></canvas>
+        </fieldset>
+
+        <div class="row2">
+          <label class="chk"><input type="checkbox" name="active" checked> Active</label>
+          <label>EXPIRES <small>(optional, e.g. after Friday)</small><input type="date" name="expires_on"></label>
+        </div>
+        <p class="form-error" id="ed-error"></p>
+        <div class="menu row">
+          <button type="button" class="btn" id="ed-cancel">CANCEL</button>
+          <button type="submit" class="btn btn-primary">SAVE</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
